@@ -25,6 +25,11 @@ class DataRepository {
     return _database!;
   }
 
+  // For testing purposes: setter for _database
+  void setDatabase(Database db) {
+    _database = db;
+  }
+
   // 資料庫物件 初始化
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
