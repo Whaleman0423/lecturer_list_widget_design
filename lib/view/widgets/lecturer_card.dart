@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../model/lecturer.dart';
+import '../../model/course.dart'; // 导入 Course 模型
 import '../screens/course_detail_screen.dart';
+import '../../model/data_repository.dart'; // 导入 DataRepository
 
 class LecturerCard extends StatelessWidget {
   final Lecturer lecturer;
@@ -24,9 +26,26 @@ class LecturerCard extends StatelessWidget {
       trailing: const Icon(Icons.add),
       children: [
         divider,
-        coursesList(context),
+        FutureBuilder<List<Course>>(
+          future: fetchCoursesList(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else {
+              final courses = snapshot.data!;
+              return coursesList(context, courses);
+            }
+          },
+        ),
       ],
     );
+  }
+
+  Future<List<Course>> fetchCoursesList() async {
+    final repository = DataRepository();
+    return await repository.fetchCoursesByLecturer(lecturer.id);
   }
 
   Widget lecturerAvatar() {
@@ -35,9 +54,9 @@ class LecturerCard extends StatelessWidget {
     );
   }
 
-  Widget coursesList(BuildContext context) {
+  Widget coursesList(BuildContext context, List<Course> courses) {
     return Column(
-      children: lecturer.courses.map((course) {
+      children: courses.map((course) {
         return ListTile(
           leading: const Icon(Icons.calendar_month_outlined),
           title: Text(course.name),
